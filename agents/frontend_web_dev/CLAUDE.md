@@ -1,49 +1,80 @@
 # Frontend web dev agent — operating rules
 
-You are a frontend dev agent for the **web** app (Next.js 14 App Router) inside a sandbox.
+You are a frontend dev agent for the **PWA** (Next.js 16 App Router) inside a sandbox.
 
-## Repo structure (moy-kosmetolog monorepo)
+## Repo structure (moy-kosmetolog monorepo, pnpm workspaces)
 
-It's a **pnpm monorepo**:
-- `packages/web/` — Next.js frontend (your playground)
-- `packages/api-python/` — Python backend (not your area)
-- `packages/api/` — secondary API service (not your area)
+- `packages/web/` — **your playground** (Next.js PWA)
+- `packages/api-python/` — Python FastAPI backend (not your area)
+- `packages/api/` — legacy Node service (ignore)
 
-**Work only inside `packages/web/`**.
+Work only inside `packages/web/`.
 
-## Tech stack rules (moy-kosmetolog web = packages/web/)
+## Tech stack rules (packages/web/)
 
-- Next.js 14 App Router, React 18, TypeScript strict mode
-- Styling: Tailwind CSS + Halo Design System tokens (see `packages/web/lib/halo/` for DS components, if exists)
-- State: TanStack Query for server state, Zustand for client state
+- **Next.js 16** App Router, **React 19**, TypeScript strict mode
+- **Tailwind CSS v4** + **Halo DS** (custom design system, see below)
+- State: TanStack Query v5 for server state, Zustand v5 for client state
 - Forms: react-hook-form + zod
-- API client: `packages/web/lib/api/` (existing patterns, auto-typed from FastAPI OpenAPI)
-- Components: `packages/web/components/` for shared, `packages/web/app/(route)/_components/` for route-local
-- Никаких inline-стилей, никаких style={{}} prop'ов кроме абсолютно крайних случаев
-- Анимации: framer-motion, либо CSS keyframes
+- HTTP: **axios** (base URL from env, JWT auto-attached interceptor)
+- API contracts auto-typed where possible from FastAPI OpenAPI
+- Middleware in `middleware.ts` — validates JWT, redirects unauthed users to `/main/otp`
+- PWA: service worker registered in `app/layout.tsx`, `manifest.json` present
+- MediaPipe runs client-side for skin landmark detection before scan upload
 
 ## Halo Design System
 
-- **Spacing** только из шкалы DS: `gap-2`, `gap-3`, `gap-4`, `gap-6`, `gap-8`. Никаких `gap-[13px]`.
-- **Цвета** только из палитры DS: `bg-halo-base-50`, `text-halo-ink-900`, etc. Никаких arbitrary hex.
-- **Шрифты** только Halo Display / Halo Text (см. `web/lib/halo/typography.ts`)
-- **Радиусы** только из шкалы: rounded-sm/md/lg/xl/2xl
+**Location:** `packages/web/halo-ds/`
+**Full docs:** `packages/web/halo-ds/CLAUDE.md` — READ THIS before touching UI.
+
+### Rules
+
+- **Colors only via CSS tokens** (`--halo-accent`, `--halo-ink-soft`, etc.) — no hardcoded hex/rgb
+- **4 themes:** `cream` (default/warm), `rose`, `sage`, `midnight` (dark)
+- **Typography:** Inter (body), Instrument Serif (display), JetBrains Mono (code) — applied via Halo Heading / text classes; do NOT pick raw `font-*` Tailwind classes
+- **Key components:** `HaloGlass`, `HaloButton`, `HaloRing`, `HaloTabBar`, `HaloSheet`, `HaloHeading` — reuse, don't reinvent
+- **Variants** via `class-variance-authority`; utility merging via `cn()` (clsx + tailwind-merge)
+- Tokens file: `packages/web/halo-ds/tokens.css`
+
+## Routing (Next.js App Router)
+
+**Public (no JWT):**
+- `/main/welcome` — Landing, theme picker
+- `/main/otp` — Phone + OTP verification
+- `/main/scan` — Anonymous skin scan
+- `/main/scan/result` — Scan result preview
+- `/callback` — OAuth callback
+
+**Protected (JWT required):**
+- `/main/home` — Dashboard
+- `/main/chat` — AI FAQ chat
+- `/main/diary` — Skin diary + streaks
+- `/main/profile` — User profile + onboarding
+- `/main/onboarding` — Initial skin setup
+- `/main/scan/[id]` — Scan detail
+
+Bottom tab bar (`HaloTabBar`): Home / Chat / Diary / Profile.
 
 ## Forbidden
 
-- `any` тип кроме крайних случаев с // eslint-disable + комментарием почему
-- Default exports для компонентов (named exports only)
-- console.log в production коде (используй `lib/log.ts`)
-- Прямые fetch — только через api-клиент
+- `any` type except extreme cases with `// eslint-disable` + comment why
+- Default exports for components (named exports only)
+- `console.log` in production code (use a proper logger)
+- Direct `fetch()` — only through axios client
+- Hardcoded hex/rgb colors — always Halo tokens
+- shadcn/ui or Material UI — Halo DS only
+- Raw Tailwind `font-*` classes — use Halo typography classes
+- Hardcoded text outside i18n catalog (if i18n exists in the repo — follow it)
 
 ## Tests
 
 - Vitest + React Testing Library
-- Не тестируй внутренности — тестируй user-facing поведение
-- E2E тесты в `web/e2e/` через Playwright (не пиши новые без явного указания)
+- Test user-facing behavior, not internals
+- E2E in `packages/web/e2e/` via Playwright — don't add new e2e without explicit instruction
 
-## Accessibility
+## Accessibility & mobile
 
-- Семантические теги (`<button>` для кликабельных штук, не `<div onClick>`)
-- aria-labels для иконок
-- Контраст ≥ AA для текста
+- **Mobile-first**: every new feature must work at 375px width before desktop is considered
+- Semantic tags (`<button>` for clickables, not `<div onClick>`)
+- `aria-labels` for icon-only buttons
+- AA contrast minimum for text

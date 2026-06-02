@@ -1,62 +1,68 @@
 # Halo Design System — moy-kosmetolog
 
-> Полная DS живёт в коде продукта в `web/lib/halo/`. Этот файл — выжимка для Designer-агента чтобы не блуждать по репо.
+> Полная DS живёт в коде продукта в `packages/web/halo-ds/`.
+> Источник истины — `packages/web/halo-ds/CLAUDE.md` (читать при работе с UI).
+> Этот файл — выжимка для Designer-агента чтобы не блуждать по репо.
 
-## Color tokens
+## Tokens
 
-### Base (поверхности)
-- `halo-base-50` — почти белый фон (#FAFAF8)
-- `halo-base-100` — светло-нейтральный (#F4F3EE)
-- `halo-base-200` — карточки на сером фоне
-- `halo-base-300` — границы
+Все цвета через CSS-переменные в `packages/web/halo-ds/tokens.css`. Примеры:
+- `--halo-accent` — основной акцент темы
+- `--halo-ink-soft` — текстовая краска (приглушённая)
+- `--halo-ink-strong` — текстовая краска (сильная)
+- `--halo-surface` — поверхности карточек
+- `--halo-bg` — фон
 
-### Ink (текст)
-- `halo-ink-900` — основной текст (почти чёрный)
-- `halo-ink-700` — secondary
-- `halo-ink-500` — placeholder
-- `halo-ink-400` — disabled
+**Никогда не хардкодим hex/rgb.** Только токены. Это даёт автоматическую поддержку 4 тем.
 
-### Accent (бренд)
-- `halo-accent-500` — основной акцент (CTA, links). Тёплый розово-бежевый, не яркий.
-- `halo-accent-300` — light version (hover, focus rings)
-- `halo-accent-700` — dark version (pressed states)
+## Themes (4)
 
-### Semantic
-- `halo-success-500` (зелёный травяной, приглушённый)
-- `halo-warn-500` (тёплый жёлто-янтарный)
-- `halo-danger-500` (красно-терракотовый, не алый)
+- `cream` (default) — тёплый кремовый, основной
+- `rose` — розоватый, женственный
+- `sage` — приглушённый зелёный
+- `midnight` — тёмная тема
 
-### Line
-- `halo-line-200` — divider тонкие
-- `halo-line-300` — divider обычные
+Пользователь выбирает на `/main/welcome` (theme picker). Дизайнер делает мокап в одной теме (`cream` по умолчанию), но классы должны переключаться корректно.
 
-## Spacing scale (в Tailwind classes)
-`gap-2 (8px), gap-3 (12px), gap-4 (16px), gap-6 (24px), gap-8 (32px), gap-12 (48px), gap-16 (64px)`
+## Typography
 
-## Radius
-`rounded-md (6px), rounded-lg (10px), rounded-xl (16px), rounded-2xl (20px), rounded-full`
+- **Inter** — body, UI
+- **Instrument Serif** — display (большие заголовки, hero)
+- **JetBrains Mono** — code/mono блоки
 
-## Typography classes
-- `text-display-xl` — hero (40-48px), Halo Display, weight 700
-- `text-display-lg` — section header (32-36px)
-- `text-display-md` — card title (24-28px)
-- `text-display-sm` — subhead (20px)
-- `text-body-lg` — основной текст (18px)
-- `text-body-md` — обычный (16px)
-- `text-body-sm` — мелкий (14px)
-- `text-body-xs` — caption (12px)
-- `text-label-lg/md/sm` — labels на кнопках, формах
+Применяется через Halo-классы (см. `halo-ds/CLAUDE.md`), не через сырые `font-*` Tailwind.
 
-## Brand voice (для микрокопи)
+## Key components (Halo DS)
+
+- `HaloGlass` — стеклянный контейнер с blur (frosted)
+- `HaloButton` — кнопки всех вариантов
+- `HaloRing` — круговой progress / decorative ring
+- `HaloTabBar` — нижняя навигация (Home / Chat / Diary / Profile)
+- `HaloSheet` — bottom sheet / modal
+- `HaloHeading` — типографические заголовки
+
+Вариантность через `class-variance-authority`. Утилита `cn()` (clsx + tailwind-merge) для merge классов.
+
+## Brand voice (микрокопи)
+
 - Тон: тёплый, экспертный, не снисходительный
-- "Ты" обращение
+- **"Ты"** обращение
 - Без американизмов («great»), без эмодзи в системных текстах
 - Никаких «*WoW*», «*Magic*», «*AI-powered*»
 - Скорее: «Понял твою кожу», «Подобрал уход», «Ещё 2 шага»
 
 ## Anti-patterns (что НЕ делаем)
-- Глянцевые градиенты (Lóvi и AI-генераторы их любят, мы — нет)
+
+- Глянцевые градиенты как dominant element
 - Яркие неоновые акценты
-- Декоративные иконки которые не несут информации
-- Stock photos с пластиковыми улыбками
-- "AI shimmer" анимации (можно лёгкий fade-in, но не больше)
+- Декоративные иконки без функции
+- Stock-фото с пластиковыми улыбками
+- "AI shimmer" анимации (лёгкий fade-in допустим)
+- shadcn/ui, Material UI — у нас Halo DS
+
+## Density / layout
+
+- Mobile-first: каждая фича должна работать на 375px width
+- Воздух важнее наполнения
+- Bottom tab bar — фикс на mobile
+- Spacing scale: придерживаемся Tailwind v4 spacing (через токены, не arbitrary)
