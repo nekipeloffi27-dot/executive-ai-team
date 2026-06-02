@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   bot:
     build: .
@@ -36,15 +34,16 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-    ports:
-      - "5432:5432"
+    # ports НЕ открываем наружу — db доступен только из docker network через имя 'db'
+    # Если нужен локальный доступ из хоста (psql отладка) — раскомментируй и привяжи к 127.0.0.1:
+    # ports:
+    #   - "127.0.0.1:5432:5432"
 
   redis:
     image: redis:7-alpine
     container_name: exec-team-redis
     restart: unless-stopped
-    ports:
-      - "6379:6379"
+    # ports НЕ открываем наружу — доступен только из docker network через имя 'redis'
 
 volumes:
   exec_team_db_data:
