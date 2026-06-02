@@ -40,10 +40,9 @@ if [[ ! -f /workspace/task/TASK.md ]]; then
   exit 2
 fi
 
-# Копируем CLAUDE.md в корень репозитория для Claude Code
-if [[ -f /workspace/task/CLAUDE.md ]]; then
-  cp /workspace/task/CLAUDE.md "${WORK}/CLAUDE.md"
-fi
+# НЕ копируем CLAUDE.md в корень репо — это перезатёрло бы реальный CLAUDE.md проекта.
+# Role-rules инлайнятся внутри TASK.md (см. runner.py:_build_task_md).
+# Claude Code прочитает существующий CLAUDE.md / PROJECT.md в репо как контекст проекта.
 
 # ─── Запуск Claude Code ──────────────────────────────────────
 echo "[sandbox] Running Claude Code (model=${CLAUDE_MODEL}, max_turns=${MAX_TURNS})"

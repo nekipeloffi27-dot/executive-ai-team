@@ -49,7 +49,7 @@ async def _resolve_role_files(task_type: str) -> tuple[Path, Path]:
     return claude_md, role_prompt
 
 
-def _build_task_md(task: dict, role_prompt_text: str) -> str:
+def _build_task_md(task: dict, role_prompt_text: str, claude_md_text: str = "") -> str:
     """Формирует TASK.md из готового плана от CTO.
 
     Это критично для эффективности dev-агента: он получает не «сделай это», а
@@ -62,28 +62,52 @@ def _build_task_md(task: dict, role_prompt_text: str) -> str:
 
     parts = [
         f"# {task['title']}\n",
-        f"## Task description\n\n{task['description']}\n",
-        "## Role-specific guidance\n",
+        "## HARD RULES — read first\n",
+        "1. **DO NOT modify the existing `CLAUDE.md` / `PROJECT.md` / `README.md` / any root-level docs**. "
+        "They are the source of truth for this project — leave them alone unless the task explicitly asks "
+        "to update documentation.\n",
+        "2. **Make REAL code changes** that fulfil the acceptance criteria below. "
+        "Do not stop after editing only docs/configs unless the task is literally about docs/configs.\n",
+        "3. **If the task description is too vague to act on** — DO NOT invent work. "
+        "Instead, create a single `EXEC_TEAM_QUESTIONS.md` file in the repo root listing your blocking questions, "
+        "commit it, and exit. The PR will signal to CEO that clarification is needed.\n",
+        "4. Use existing project patterns. Read `PROJECT.md`, `packages/<your-package>/`, and any nested "
+        "`CLAUDE.md` (e.g. `packages/web/halo-ds/CLAUDE.md`) as context.\n",
+        "5. Do not add new top-level dependencies unless TASK.md explicitly lists them.\n",
+        "6. Write tests for new code in the project's existing test framework.\n",
+        "7. If you can't complete a criterion, document why in the commit message — don't fake it.\n",
+        "\n## Task description\n\n",
+        task.get("description", "") or "(нет описания — см. attachments)",
+        "\n\n## Role-specific guidance\n",
         role_prompt_text,
-        "\n## Affected files\n",
     ]
-    for f in affected:
-        parts.append(f"- `{f}`")
+    if claude_md_text:
+        parts.append("\n## Tech-stack rules (your operating manual for this role)\n")
+        parts.append(claude_md_text)
+
+    parts.append("\n## Affected files\n")
+    if affected:
+        for f in affected:
+            parts.append(f"- `{f}`")
+    else:
+        parts.append("_Не указаны явно. Определи сам из описания + attachments + структуры репо._")
     parts.append("\n## Changes per file\n")
-    for ch in changes:
-        parts.append(f"### `{ch.get('path','?')}`\n\n{ch.get('what','')}\n")
+    if changes:
+        for ch in changes:
+            parts.append(f"### `{ch.get('path','?')}`\n\n{ch.get('what','')}\n")
+    else:
+        parts.append("_Не указаны явно. Декомпозируй описание сам._")
     if api_contract:
         parts.append("## API contract\n\n```json")
         parts.append(json.dumps(api_contract, indent=2, ensure_ascii=False))
         parts.append("```")
     parts.append("\n## Acceptance criteria\n")
-    for c in criteria:
-        parts.append(f"- [ ] {c}")
-    parts.append("\n## Rules\n")
-    parts.append("- Use existing project patterns (see CLAUDE.md mounted at repo root).")
-    parts.append("- Do not add new dependencies unless explicitly listed.")
-    parts.append("- Write tests for new code in the project's test framework.")
-    parts.append("- If you can't complete a criterion, document why in commit message instead of faking it.")
+    if criteria:
+        for c in criteria:
+            parts.append(f"- [ ] {c}")
+    else:
+        parts.append("- [ ] Реализация описания (см. выше + attachments)")
+        parts.append("- [ ] PR с понятным заголовком и описанием")
     return "\n".join(parts)
 
 
@@ -110,9 +134,13 @@ async def run_dev_agent(
 
     claude_md_src, role_prompt_src = await _resolve_role_files(task_type)
     role_prompt_text = role_prompt_src.read_text(encoding="utf-8")
+    claude_md_text = claude_md_src.read_text(encoding="utf-8")
 
-    (task_dir / "TASK.md").write_text(_build_task_md(task, role_prompt_text), encoding="utf-8")
-    (task_dir / "CLAUDE.md").write_text(claude_md_src.read_text(encoding="utf-8"), encoding="utf-8")
+    # CLAUDE.md инлайнится внутрь TASK.md — НЕ копируется в корень репо продукта,
+    # иначе перезаписал бы существующий PROJECT.md / CLAUDE.md проекта.
+    (task_dir / "TASK.md").write_text(
+        _build_task_md(task, role_prompt_text, claude_md_text), encoding="utf-8"
+    )
     (task_dir / "pr-body.md").write_text(
         f"## Task\n{task['title']}\n\n## Description\n{task['description']}\n\n"
         f"## Acceptance Criteria\n" + "\n".join(f"- [ ] {c}" for c in task.get("acceptance_criteria") or []) +
