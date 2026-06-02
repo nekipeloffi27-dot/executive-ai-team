@@ -2,7 +2,7 @@
 from __future__ import annotations
 from pathlib import Path
 from typing import Literal
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -101,6 +101,18 @@ class Settings(BaseSettings):
     # Skills
     skills_enabled: bool = Field(default=True, alias="SKILLS_ENABLED")
     skills_dir: str = Field(default="/app/skills", alias="SKILLS_DIR")
+
+    @field_validator(
+        "tg_topic_briefing", "tg_topic_decisions", "tg_topic_research",
+        "tg_topic_strategy", "tg_topic_design", "tg_topic_engineering",
+        "tg_topic_skills", "tg_topic_general",
+        mode="before",
+    )
+    @classmethod
+    def _empty_topic_to_zero(cls, v):
+        if v is None or (isinstance(v, str) and v.strip() == ""):
+            return 0
+        return v
 
     @property
     def allowed_user_ids(self) -> set[int]:
