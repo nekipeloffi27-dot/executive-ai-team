@@ -44,7 +44,7 @@ def _make_client() -> AsyncAnthropic:
         "timeout": httpx.Timeout(settings.anthropic_timeout_seconds, connect=15.0),
     }
     if settings.anthropic_proxy_url:
-        http_client_kwargs["proxies"] = settings.anthropic_proxy_url
+        http_client_kwargs["proxy"] = settings.anthropic_proxy_url
     return AsyncAnthropic(
         api_key=settings.anthropic_api_key,
         http_client=httpx.AsyncClient(**http_client_kwargs),
