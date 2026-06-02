@@ -18,6 +18,7 @@ from bot.handlers import (
     research_cmd as h_research,
     skills_cmd as h_skills,
     briefing_cmd as h_briefing,
+    run_task_cmd as h_run_task,
 )
 from agents.base import build_registry
 
@@ -44,7 +45,11 @@ async def main():
     chief.dp.include_router(h_research.build_router(registry))
     chief.dp.include_router(h_skills.build_router())
     chief.dp.include_router(h_briefing.build_router(registry))
+    chief.dp.include_router(h_run_task.build_router())
     chief.dp.include_router(h_nl.build_router(registry, bots))  # fallback последним
+
+    # dev-бот тоже умеет /run_task — естественнее запускать кодовые задачи у него
+    bots["dev"].dp.include_router(h_run_task.build_router())
 
     # Остальные боты — только admin commands. NL fallback НЕ регистрируем
     # чтобы не дублировать ответ в группе (chief уже ловит свободный текст).
