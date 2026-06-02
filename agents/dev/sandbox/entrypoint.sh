@@ -21,7 +21,9 @@ if [[ -n "${BAKED_PROXY_URL:-}" ]]; then
 fi
 
 # ─── gh auth ─────────────────────────────────────────────────
-echo "${GITHUB_TOKEN}" | gh auth login --with-token
+# gh CLI автоматически использует GITHUB_TOKEN из env (gh auth login падает если token уже set)
+# Проверим что у gh есть доступ к API:
+gh auth status 2>&1 | head -5 || echo "[sandbox] gh auth status non-zero, but GITHUB_TOKEN is set — proceeding"
 
 # ─── Клон ────────────────────────────────────────────────────
 WORK=/workspace/repo
