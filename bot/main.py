@@ -48,8 +48,8 @@ async def main():
     chief.dp.include_router(h_run_task.build_router())
     chief.dp.include_router(h_nl.build_router(registry, bots))  # fallback последним
 
-    # dev-бот тоже умеет /run_task — естественнее запускать кодовые задачи у него
-    bots["dev"].dp.include_router(h_run_task.build_router())
+    # /run_task — только у chief, чтобы избежать дубликатов (несколько ботов
+    # видят одно сообщение в группе и одновременно запускают sandbox).
 
     # Остальные боты — только admin commands. NL fallback НЕ регистрируем
     # чтобы не дублировать ответ в группе (chief уже ловит свободный текст).
