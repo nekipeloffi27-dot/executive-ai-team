@@ -157,6 +157,21 @@ async def run_dev_agent(
     claude_model = model_by_complexity.get(complexity, settings.sandbox_claude_model)
     max_turns = {"simple": 30, "medium": 50, "complex": 80}.get(complexity, settings.sandbox_claude_code_max_turns)
 
+    # ─── chown workspace для non-root user внутри sandbox ─────────
+    # Bot работает от root (внутри bot-контейнера), создаёт workspace с owner root.
+    # Sandbox запускается под user 'node' (uid=1000) — иначе Claude Code блокирует
+    # --dangerously-skip-permissions. Нужно поменять owner volume до docker run.
+    try:
+        chown_proc = await asyncio.create_subprocess_exec(
+            "chown", "-R", "1000:1000", str(host_ws),
+            stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
+        )
+        _, chown_err = await chown_proc.communicate()
+        if chown_proc.returncode != 0:
+            logger.warning("chown failed for {}: {}", host_ws, chown_err.decode(errors='replace'))
+    except Exception as e:
+        logger.warning("chown subprocess error for {}: {}", host_ws, e)
+
     # ─── docker run ────────────────────────────────────────
     container_name = f"exec-dev-{task_type}-{str(task_id)[:8]}-{uuid4().hex[:6]}"
     host_skills_dir = str(Path(settings.skills_dir).resolve())
