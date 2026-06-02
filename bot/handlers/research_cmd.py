@@ -29,7 +29,12 @@ def build_router(agent_registry) -> Router:
         if result.get("blocked"):
             await m.answer(f"⚠️ Заблокировано бюджетом: {result.get('reason')}")
             return
-        content = result.get("content", "(пустой ответ)")
+        content = (result.get("content") or "").strip()
+        if not content:
+            iters = result.get("iterations", "?")
+            err = result.get("error") or "нет финального текста"
+            await m.answer(f"⚠️ Researcher не дал ответа (итераций: {iters}). Причина: {err}")
+            return
         # сохраняем как finding
         async with pool.acquire() as c:
             await c.execute("""

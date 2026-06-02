@@ -45,9 +45,16 @@ def build_router(agent_registry, bots) -> Router:
                 pool, summary or m.text,
                 project_slug=settings.current_project_slug,
             )
-            content = result.get("content", "(empty)")
+            content = (result.get("content") or "").strip()
             if result.get("blocked"):
                 content = f"⚠️ Заблокировано бюджет-стражем: {result.get('reason')}"
+            if not content:
+                iters = result.get("iterations", "?")
+                err = result.get("error") or "нет финального текста"
+                content = (
+                    f"⚠️ {target} не дал ответа (итераций: {iters}). "
+                    f"Причина: {err}. Попробуй переформулировать или прямую команду."
+                )
             await thinking_msg.delete()
             # отправка от соответствующего бота — упрощено: отвечаем тем же ботом
             await m.answer(content[:4000])

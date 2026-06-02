@@ -31,7 +31,11 @@ def build_router(agent_registry) -> Router:
             project_slug=settings.current_project_slug,
             operation_kind="briefing",
         )
-        content = result.get("content", "(empty)")
+        content = (result.get("content") or "").strip()
+        if not content:
+            iters = result.get("iterations", "?")
+            err = result.get("error") or "нет финального текста"
+            content = f"⚠️ Chief не вернул briefing (итераций: {iters}). Причина: {err}"
         await m.answer(f"<b>📋 Daily Briefing</b>\n\n{content[:3500]}")
 
     return r
