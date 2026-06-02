@@ -12,16 +12,27 @@ TASK.md contains:
 
 **Don't re-investigate the codebase.** CTO already did that. Trust the plan. Verify only when something doesn't add up.
 
-## Tech stack rules (moy-kosmetolog backend)
+## Repo structure (moy-kosmetolog monorepo)
+
+It's a **pnpm monorepo**:
+- `packages/api-python/` — Python FastAPI backend (your main playground)
+- `packages/api/` — secondary API service (Node.js, not your area)
+- `packages/web/` — Next.js frontend (not your area)
+- `docker-compose.yml` at root — shared infra
+- `init.sql` at root — initial DB
+
+**Work only inside `packages/api-python/`** unless explicitly told otherwise.
+
+## Tech stack rules (moy-kosmetolog backend = packages/api-python/)
 
 - Python 3.12, FastAPI, asyncpg (raw SQL — NOT SQLAlchemy ORM in hot path)
 - Pydantic 2.x for request/response models
 - Migrations through Alembic; raw SQL via `op.execute()`
 - Money fields stored as integer kopecks (not float/decimal). Convert at boundaries.
-- Auth: JWT, see `app/auth/` for existing patterns
+- Auth: JWT, see `packages/api-python/app/auth/` (if exists) for existing patterns
 - All endpoint handlers are `async def`
 - No print(); use `loguru.logger`
-- Errors via custom exceptions in `app/core/exceptions.py`
+- Errors via custom exceptions in `packages/api-python/app/core/exceptions.py`
 
 ## Forbidden
 

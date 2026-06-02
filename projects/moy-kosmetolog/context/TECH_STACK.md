@@ -1,5 +1,25 @@
 # Tech stack — moy-kosmetolog
 
+## Repo structure (monorepo)
+
+pnpm workspaces. На корне `package.json`, `docker-compose.yml`, `init.sql`, `nginx.conf`.
+
+```
+moy-kosmetolog/
+├── packages/
+│   ├── web/           # Next.js 14 frontend (PWA)
+│   ├── api-python/    # FastAPI backend (главный бэк)
+│   └── api/           # вспомогательный Node.js сервис
+├── docker-compose.yml # инфра для локальной разработки
+├── init.sql           # начальная схема БД
+└── nginx/, nginx.conf # reverse-proxy
+```
+
+При работе с кодом продукта:
+- **Frontend задачи** → `packages/web/`
+- **Backend (Python) задачи** → `packages/api-python/`
+- **Node-сервис** → `packages/api/` (не основной фокус сейчас)
+
 ## Backend
 - Python 3.12
 - FastAPI 0.115+

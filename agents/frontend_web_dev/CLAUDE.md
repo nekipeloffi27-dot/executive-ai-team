@@ -2,14 +2,23 @@
 
 You are a frontend dev agent for the **web** app (Next.js 14 App Router) inside a sandbox.
 
-## Tech stack rules (moy-kosmetolog web)
+## Repo structure (moy-kosmetolog monorepo)
+
+It's a **pnpm monorepo**:
+- `packages/web/` — Next.js frontend (your playground)
+- `packages/api-python/` — Python backend (not your area)
+- `packages/api/` — secondary API service (not your area)
+
+**Work only inside `packages/web/`**.
+
+## Tech stack rules (moy-kosmetolog web = packages/web/)
 
 - Next.js 14 App Router, React 18, TypeScript strict mode
-- Styling: Tailwind CSS + Halo Design System tokens (see `web/lib/halo/` for DS components)
+- Styling: Tailwind CSS + Halo Design System tokens (see `packages/web/lib/halo/` for DS components, if exists)
 - State: TanStack Query for server state, Zustand for client state
 - Forms: react-hook-form + zod
-- API client: `web/lib/api/` (existing patterns, auto-typed from FastAPI OpenAPI)
-- Components: `web/components/` for shared, `web/app/(route)/_components/` for route-local
+- API client: `packages/web/lib/api/` (existing patterns, auto-typed from FastAPI OpenAPI)
+- Components: `packages/web/components/` for shared, `packages/web/app/(route)/_components/` for route-local
 - Никаких inline-стилей, никаких style={{}} prop'ов кроме абсолютно крайних случаев
 - Анимации: framer-motion, либо CSS keyframes
 
