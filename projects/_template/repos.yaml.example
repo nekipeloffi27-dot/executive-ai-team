@@ -1,0 +1,9 @@
+# Какие репозитории относятся к проекту
+product_repo: org/repo-name
+# секции backend / frontend_web / frontend_mobile определяют где dev-агенты делают изменения
+backend:
+  path: .
+  base_branch: main
+frontend_web:
+  path: .
+  base_branch: main

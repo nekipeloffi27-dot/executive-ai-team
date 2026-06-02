@@ -1,0 +1,50 @@
+version: "3.9"
+
+services:
+  bot:
+    build: .
+    container_name: exec-team-bot
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./projects:/app/projects
+      - ./skills:/app/skills
+      - /var/run/docker.sock:/var/run/docker.sock    # для запуска sandbox-контейнеров
+      - ${SANDBOX_WORKSPACE}:${SANDBOX_WORKSPACE}    # хост-путь = контейнер-путь, см. Часть 5
+      - ${CODEBASE_SNAPSHOT_DIR}:${CODEBASE_SNAPSHOT_DIR}:ro
+      - ./mockups:/app/mockups
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    command: >
+      sh -c "alembic upgrade head && python -m bot.main"
+
+  db:
+    image: postgres:15-alpine
+    container_name: exec-team-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: exec_team
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: exec_team
+    volumes:
+      - exec_team_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U exec_team"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    container_name: exec-team-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+volumes:
+  exec_team_db_data:

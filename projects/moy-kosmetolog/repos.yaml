@@ -1,0 +1,7 @@
+product_repo: ${PRODUCT_REPO}  # из .env
+backend:
+  path: .
+  base_branch: main
+frontend_web:
+  path: .
+  base_branch: main
