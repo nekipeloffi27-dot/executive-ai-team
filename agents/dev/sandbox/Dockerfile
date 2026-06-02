@@ -32,13 +32,16 @@ ENV BAKED_PROXY_URL=${ANTHROPIC_PROXY_URL}
 # ─── Entrypoint ──────────────────────────────────────────────
 WORKDIR /workspace
 COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN chmod +x /entrypoint.sh && chown -R node:node /workspace
 
-# git дефолты, чтобы не было сюрпризов
-RUN git config --global user.email "dev-agent@exec-team.local" \
- && git config --global user.name  "Exec Team Dev Agent" \
- && git config --global init.defaultBranch main \
- && git config --global pull.rebase false \
- && git config --global core.autocrlf input
+# git дефолты на системном уровне — будут видны и под root, и под node
+RUN git config --system user.email "dev-agent@exec-team.local" \
+ && git config --system user.name  "Exec Team Dev Agent" \
+ && git config --system init.defaultBranch main \
+ && git config --system pull.rebase false \
+ && git config --system core.autocrlf input
 
+# Claude Code не разрешает --dangerously-skip-permissions под root,
+# поэтому переключаемся на встроенного user 'node' (uid=1000, совпадает с ubuntu на host VM)
+USER node
 ENTRYPOINT ["/entrypoint.sh"]
