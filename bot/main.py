@@ -46,9 +46,9 @@ async def main():
     chief.dp.include_router(h_briefing.build_router(registry))
     chief.dp.include_router(h_nl.build_router(registry, bots))  # fallback последним
 
-    # Остальные боты — только admin + nl fallback (они в основном пишут от своего имени)
-    for name in ("designer", "cto", "dev", "research"):
-        bots[name].dp.include_router(h_nl.build_router(registry, bots))
+    # Остальные боты — только admin commands. NL fallback НЕ регистрируем
+    # чтобы не дублировать ответ в группе (chief уже ловит свободный текст).
+    # Не-chief боты постят от своего имени из логики handler'ов (threads, feature flow и т.д.).
 
     logger.info("Starting {} bots in parallel", len(bots))
 
